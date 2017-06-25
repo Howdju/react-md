@@ -511,6 +511,7 @@ export default class Layover extends PureComponent {
       width: sameWidth ? width : undefined,
     });
 
+    // console.log(this.props.id + ' _init', styles);
     this.setState({ styles });
   };
 
@@ -549,6 +550,9 @@ export default class Layover extends PureComponent {
         return;
       } else if (fixed && node.classList.contains('md-dialog-container')) {
         this._dialog = node.firstChild;
+        return;
+      } else if (fixed && node.classList.contains('md-dialog')) {
+        this._dialog = node;
         return;
       } else if (fixed && !node.classList.contains('md-layover-child')) {
         this._inFixed = true;
@@ -623,11 +627,19 @@ export default class Layover extends PureComponent {
       }
     }
 
+    const centeredDialog = this._dialog && this._dialog.classList.contains('md-dialog--centered');
+    if (centeredDialog) {
+      const dialogRect = this._dialog.getBoundingClientRect();
+      addToLeft -= dialogRect.left;
+      addToTop -= dialogRect.top;
+    }
 
     if (addToTop !== 0 || addToLeft !== 0) {
+
       this._initialTop += addToTop;
       this._initialLeft += addToLeft;
 
+      // console.log(this.props.id + ' _initialFix', { top: this._initialTop, left: this._initialLeft });
       this.setState({ styles: this._mergeStyles({ top: this._initialTop, left: this._initialLeft }) });
     }
   };
@@ -676,6 +688,19 @@ export default class Layover extends PureComponent {
     if (styles.top || styles.left) {
       this._initialLeft = styles.left || this._initialLeft;
       this._initialTop = styles.top || this._initialTop;
+
+      const centeredDialog = this._dialog && this._dialog.classList.contains('md-dialog--centered');
+      if (centeredDialog) {
+        const dialogRect = this._dialog.getBoundingClientRect();
+        if (styles.left) {
+          styles.left -= dialogRect.left;
+        }
+        if (styles.top) {
+          styles.top -= dialogRect.top;
+        }
+      }
+
+      // console.log(this.props.id + ' _positionChild', styles);
       this.setState({ styles: this._mergeStyles(styles) }, this._initialFix);
     } else {
       this._initialFix();
@@ -684,10 +709,9 @@ export default class Layover extends PureComponent {
 
   _handleScroll = () => {
     if (!this._ticking) {
+      this._ticking = true;
       requestAnimationFrame(this._handleTick);
     }
-
-    this._ticking = true;
   };
 
   /**
@@ -717,9 +741,9 @@ export default class Layover extends PureComponent {
     let x;
     let y;
     if (this._dialog) {
-      const scroll = getScroll(this._dialog);
-      x = scroll.x;
-      y = scroll.y;
+      // const scroll = getScroll(this._dialog);
+      // x = scroll.x;
+      // y = scroll.y;
     } else if (fixedTo !== window && (fixedTo.x || fixedTo.y)) {
       x = getScroll(fixedTo.x || window).x;
       y = getScroll(fixedTo.y || window).y;
@@ -758,6 +782,7 @@ export default class Layover extends PureComponent {
     }
 
     if (styles.top !== top || styles.left !== left) {
+      // console.log(this.props.id + ' _handleTick', { left, top });
       this.setState({ styles: this._mergeStyles({ left, top }) }, () => {
         this._ticking = false;
       });
@@ -820,6 +845,7 @@ export default class Layover extends PureComponent {
 
       this._initialY = getScroll(scrollEl).y;
 
+      // console.log(this.props.id + ' _attemptFix', { top: this._initialTop });
       this.setState({ styles: this._mergeStyles({ top: this._initialTop }) }, () => {
         this._ticking = false;
       });

@@ -28,7 +28,9 @@ export default function handleKeyboardAccessibility(e, onClick, listenToEnter = 
   const space = listenToSpace && key === SPACE;
   const enter = key === ENTER;
 
-  if (space) {
+  // Temporarily apply fix from 84407ba until that is merged
+  // Should this also include TEXTAREA?
+  if (space && e.target.tagName !== 'INPUT') {
     // Stop page scrolling
     e.preventDefault();
   }
